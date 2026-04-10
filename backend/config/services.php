@@ -35,4 +35,21 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Factus — API de Facturación Electrónica Colombiana
+    |--------------------------------------------------------------------------
+    | Credenciales para la integración con la API de Factus.
+    | La autenticación usa OAuth2 Password Grant (/oauth/token).
+    | En producción reemplazar las variables de entorno por las credenciales reales.
+    */
+    'factus' => [
+        'base_url'      => env('FACTUS_BASE_URL', 'https://api-sandbox.factus.com.co'),
+        'client_id'     => env('FACTUS_CLIENT_ID'),
+        'client_secret' => env('FACTUS_CLIENT_SECRET'),
+        'username'      => env('FACTUS_USERNAME'),
+        'password'      => env('FACTUS_PASSWORD'),
+        'timeout'       => env('FACTUS_TIMEOUT', 30),
+    ],
+
 ];
