@@ -8,17 +8,13 @@ namespace App\Providers;
  * AppServiceProvider — proveedor principal de la aplicación.
  *
  * Responsabilidades:
- *   1. Registrar los bindings de Interfaces → Implementaciones concretas
- *      para que Laravel los resuelva automáticamente vía inyección de dependencias.
- *   2. Cualquier configuración global de la aplicación que no pertenezca
- *      a un proveedor especializado.
- *
- * Convención de bindings:
- *   Siempre se registra la Interfaz (Contract) como clave y la implementación
- *   concreta como valor. Los Services declaran el tipo de la interfaz en su
- *   constructor, y el contenedor inyecta la implementación registrada aquí.
+ *   1. Bindings Interface → Implementación para los Repositories.
+ *   2. Singletons para los servicios de integración con Factus:
+ *      FactusAuthManager y FactusClient se instancian UNA sola vez por request.
  */
 
+use App\Integrations\Factus\FactusAuthManager;
+use App\Integrations\Factus\FactusClient;
 use App\Repositories\ClienteRepository;
 use App\Repositories\Contracts\ClienteRepositoryInterface;
 use App\Repositories\Contracts\FacturaRepositoryInterface;
@@ -30,36 +26,49 @@ use Illuminate\Support\ServiceProvider;
 class AppServiceProvider extends ServiceProvider
 {
     /**
-     * Registra los bindings de interfaces en el contenedor de dependencias.
-     *
-     * Cada bind() le dice a Laravel: "cuando alguien pida la interfaz X,
-     * entrega una instancia de la clase Y".
+     * Registra bindings de interfaces y singletons en el contenedor IoC.
      *
      * @return void
      */
     public function register(): void
     {
-        // ── Repositorio de clientes ───────────────────────────────────────────
+        // ── Repositorios: Interface → Implementación concreta ─────────────────
         $this->app->bind(
             ClienteRepositoryInterface::class,
             ClienteRepository::class
         );
 
-        // ── Repositorio de productos ──────────────────────────────────────────
         $this->app->bind(
             ProductoRepositoryInterface::class,
             ProductoRepository::class
         );
 
-        // ── Repositorio de facturas ───────────────────────────────────────────
         $this->app->bind(
             FacturaRepositoryInterface::class,
             FacturaRepository::class
         );
+
+        // ── Integración Factus: singletons ────────────────────────────────────
+        // FactusAuthManager gestiona el token OAuth2 — singleton para no
+        // perder el estado del token entre llamadas dentro del mismo request.
+        $this->app->singleton(FactusAuthManager::class, function (): FactusAuthManager {
+            return new FactusAuthManager(
+                config: config('services.factus')
+            );
+        });
+
+        // FactusClient depende de FactusAuthManager — también singleton
+        // para reutilizar la misma instancia de Guzzle en el request.
+        $this->app->singleton(FactusClient::class, function ($app): FactusClient {
+            return new FactusClient(
+                authManager: $app->make(FactusAuthManager::class),
+                config:      config('services.factus'),
+            );
+        });
     }
 
     /**
-     * Configura servicios que requieren que la aplicación esté bootstrapped.
+     * Bootstrap de servicios que requieren la app inicializada.
      *
      * @return void
      */
