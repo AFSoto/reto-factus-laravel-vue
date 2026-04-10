@@ -13,10 +13,11 @@ namespace App\Repositories\Contracts;
  *
  * Convención de parámetros:
  *   - $userId: siempre requerido para aislar datos por usuario autenticado.
- *   - $data: array estructurado. En el Bloque 3 se reemplazará por DTOs tipados.
- *   - Los filtros de paginación siguen la forma: ['busqueda', 'tipo_persona', 'activo'].
+ *   - crear/actualizar reciben DTOs tipados — nunca arrays sin estructura.
+ *   - Los filtros de paginación usan arrays simples de primitivas (aceptable para filtros).
  */
 
+use App\DTOs\Cliente\CreateClienteDTO;
 use App\Models\Cliente;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
@@ -62,41 +63,21 @@ interface ClienteRepositoryInterface
     public function buscarPorDocumento(string $numero, int $tipo, int $userId): ?Cliente;
 
     /**
-     * Crea un nuevo cliente con los datos proporcionados.
+     * Crea un nuevo cliente con los datos del DTO.
      *
-     * @param  array{
-     *     user_id: int,
-     *     tipo_persona: string,
-     *     tipo_documento_identidad_id: int,
-     *     numero_documento: string,
-     *     digito_verificacion?: string|null,
-     *     razon_social?: string|null,
-     *     primer_nombre?: string|null,
-     *     segundo_nombre?: string|null,
-     *     primer_apellido?: string|null,
-     *     segundo_apellido?: string|null,
-     *     email: string,
-     *     telefono?: string|null,
-     *     direccion: string,
-     *     municipio_id: string,
-     *     municipio_nombre?: string|null,
-     *     departamento?: string|null,
-     *     obligations?: array|null,
-     *     tribute_id: int,
-     *     activo?: bool
-     * }  $data  Datos del cliente a crear
+     * @param  CreateClienteDTO  $dto  DTO con los datos validados del cliente
      * @return Cliente  El cliente recién creado
      */
-    public function crear(array $data): Cliente;
+    public function crear(CreateClienteDTO $dto): Cliente;
 
     /**
-     * Actualiza los datos de un cliente existente.
+     * Actualiza los datos de un cliente existente con los datos del DTO.
      *
-     * @param  Cliente  $cliente  Instancia del cliente a actualizar
-     * @param  array    $data     Campos a modificar (misma forma que crear())
+     * @param  Cliente           $cliente  Instancia del cliente a actualizar
+     * @param  CreateClienteDTO  $dto      DTO con los nuevos datos validados
      * @return Cliente  El cliente con los datos actualizados
      */
-    public function actualizar(Cliente $cliente, array $data): Cliente;
+    public function actualizar(Cliente $cliente, CreateClienteDTO $dto): Cliente;
 
     /**
      * Elimina (soft delete) un cliente.

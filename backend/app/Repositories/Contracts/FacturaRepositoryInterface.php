@@ -11,14 +11,13 @@ namespace App\Repositories\Contracts;
  * Incluye métodos específicos del dominio de facturación electrónica:
  * transiciones de estado (emitir, anular) y métricas para el dashboard.
  *
+ * crear() recibe CreateFacturaDTO y crearItems() recibe FacturaItemDTO[] — nunca arrays sin estructura.
+ *
  * Convención de filtros para paginar():
- *   - 'estado'      (string): borrador | emitida | anulada
- *   - 'cliente_id'  (int): filtrar por cliente
- *   - 'fecha_desde' (string Y-m-d): rango de fecha inicio
- *   - 'fecha_hasta' (string Y-m-d): rango de fecha fin
- *   - 'busqueda'    (string): número de factura o CUFE parcial
+ *   Recibe FacturasFilterDTO::toArray() — primitivas simples aceptables para filtros.
  */
 
+use App\DTOs\Factura\CreateFacturaDTO;
 use App\Models\Factura;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
@@ -54,48 +53,39 @@ interface FacturaRepositoryInterface
     public function buscarPorFactusId(int $factusId): ?Factura;
 
     /**
-     * Crea una nueva factura en estado borrador.
-     * Los ítems deben crearse por separado mediante crearItems().
+     * Crea una nueva factura en estado borrador a partir del DTO.
+     * Los ítems se crean por separado mediante crearItems().
+     * El número de factura (numero, numero_completo) lo asigna el Service
+     * antes de llamar a este método.
      *
-     * @param  array{
-     *     user_id: int,
-     *     cliente_id: int,
-     *     numbering_range_id: int,
-     *     prefijo?: string|null,
-     *     numero: int,
-     *     numero_completo?: string|null,
-     *     payment_form: int,
-     *     payment_method_code: int,
-     *     payment_due_date?: string|null,
-     *     observaciones?: string|null,
-     *     subtotal: float,
-     *     total_descuento: float,
-     *     total_iva: float,
-     *     total: float,
-     *     estado?: string
-     * }  $data  Datos de la factura a crear
-     * @return Factura  La factura recién creada
+     * @param  CreateFacturaDTO  $dto  DTO con los datos validados de la factura e ítems
+     * @param  int               $numero         Número consecutivo asignado por el Service
+     * @param  string|null       $numeroCompleto Prefijo + número formateado
+     * @return Factura  La factura recién creada en estado borrador
      */
-    public function crear(array $data): Factura;
+    public function crear(CreateFacturaDTO $dto, int $numero, ?string $numeroCompleto): Factura;
 
     /**
-     * Crea los ítems de una factura de forma masiva.
-     * Reemplaza todos los ítems existentes si se llama sobre una factura con ítems.
+     * Crea los ítems de una factura en un insert masivo.
+     * Reemplaza todos los ítems existentes si la factura ya los tenía.
+     * Recibe los arrays ya serializados desde FacturaItemDTO::toArray().
      *
-     * @param  Factura  $factura  Factura a la que pertenecen los ítems
-     * @param  array    $items    Array de arrays con los datos de cada ítem
+     * @param  Factura              $factura      Factura propietaria de los ítems
+     * @param  array<array<string,mixed>>  $items Array de arrays (cada uno de FacturaItemDTO::toArray())
      * @return void
      */
     public function crearItems(Factura $factura, array $items): void;
 
     /**
-     * Actualiza los datos de una factura existente (solo borradores).
+     * Actualiza los datos de una factura borrador existente.
      *
-     * @param  Factura  $factura  Instancia de la factura a actualizar
-     * @param  array    $data     Campos a modificar (misma forma que crear())
+     * @param  Factura           $factura  Instancia de la factura a actualizar
+     * @param  CreateFacturaDTO  $dto      DTO con los nuevos datos validados
+     * @param  int               $numero         Número consecutivo (puede cambiar al cambiar el rango)
+     * @param  string|null       $numeroCompleto Prefijo + número formateado
      * @return Factura  La factura con los datos actualizados
      */
-    public function actualizar(Factura $factura, array $data): Factura;
+    public function actualizar(Factura $factura, CreateFacturaDTO $dto, int $numero, ?string $numeroCompleto): Factura;
 
     /**
      * Elimina (soft delete) una factura en estado borrador.
