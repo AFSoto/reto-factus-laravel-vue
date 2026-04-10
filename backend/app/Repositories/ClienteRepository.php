@@ -14,6 +14,7 @@ namespace App\Repositories;
  * Implementa ClienteRepositoryInterface para garantizar el contrato con los Services.
  */
 
+use App\DTOs\Cliente\CreateClienteDTO;
 use App\Models\Cliente;
 use App\Repositories\Contracts\ClienteRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -112,26 +113,26 @@ class ClienteRepository implements ClienteRepositoryInterface
     }
 
     /**
-     * Crea y persiste un nuevo cliente.
+     * Crea y persiste un nuevo cliente desde el DTO.
      *
-     * @param  array  $data  Datos del cliente (ver interfaz para la forma completa)
+     * @param  CreateClienteDTO  $dto  DTO con los datos validados del cliente
      * @return Cliente  La instancia creada con su ID asignado
      */
-    public function crear(array $data): Cliente
+    public function crear(CreateClienteDTO $dto): Cliente
     {
-        return Cliente::create($data);
+        return Cliente::create($dto->toArray());
     }
 
     /**
-     * Actualiza los atributos de un cliente existente.
+     * Actualiza los atributos de un cliente existente desde el DTO.
      *
-     * @param  Cliente  $cliente  Instancia a actualizar
-     * @param  array    $data     Campos a modificar
+     * @param  Cliente           $cliente  Instancia a actualizar
+     * @param  CreateClienteDTO  $dto      DTO con los nuevos datos validados
      * @return Cliente  La instancia con los datos actualizados
      */
-    public function actualizar(Cliente $cliente, array $data): Cliente
+    public function actualizar(Cliente $cliente, CreateClienteDTO $dto): Cliente
     {
-        $cliente->update($data);
+        $cliente->update($dto->toArray());
 
         return $cliente->refresh();
     }

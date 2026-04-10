@@ -18,6 +18,7 @@ namespace App\Repositories;
  *   - Provee métricas agregadas para el dashboard.
  */
 
+use App\DTOs\Factura\CreateFacturaDTO;
 use App\Models\Factura;
 use App\Models\FacturaItem;
 use App\Repositories\Contracts\FacturaRepositoryInterface;
@@ -111,17 +112,21 @@ class FacturaRepository implements FacturaRepositoryInterface
     }
 
     /**
-     * Crea y persiste una nueva factura en estado borrador.
+     * Crea y persiste una nueva factura en estado borrador desde el DTO.
+     * El número y numero_completo los asigna el Service consultando el rango en Factus.
      *
-     * @param  array  $data  Datos de la factura
+     * @param  CreateFacturaDTO  $dto            DTO con encabezado e ítems de la factura
+     * @param  int               $numero         Número consecutivo asignado por el Service
+     * @param  string|null       $numeroCompleto Prefijo + número formateado (ej: SETP990000001)
      * @return Factura
      */
-    public function crear(array $data): Factura
+    public function crear(CreateFacturaDTO $dto, int $numero, ?string $numeroCompleto): Factura
     {
-        // Aseguramos que las facturas nuevas siempre arrancan como borrador
-        $data['estado'] = $data['estado'] ?? Factura::ESTADO_BORRADOR;
-
-        return Factura::create($data);
+        return Factura::create(array_merge($dto->toArray(), [
+            'numero'          => $numero,
+            'numero_completo' => $numeroCompleto,
+            'estado'          => Factura::ESTADO_BORRADOR,
+        ]));
     }
 
     /**
@@ -153,15 +158,20 @@ class FacturaRepository implements FacturaRepositoryInterface
     }
 
     /**
-     * Actualiza los datos de una factura existente.
+     * Actualiza los datos de una factura borrador desde el DTO.
      *
-     * @param  Factura  $factura  Instancia a actualizar
-     * @param  array    $data     Campos a modificar
+     * @param  Factura           $factura        Instancia a actualizar
+     * @param  CreateFacturaDTO  $dto            DTO con los nuevos datos validados
+     * @param  int               $numero         Número consecutivo (puede cambiar al cambiar rango)
+     * @param  string|null       $numeroCompleto Prefijo + número formateado
      * @return Factura
      */
-    public function actualizar(Factura $factura, array $data): Factura
+    public function actualizar(Factura $factura, CreateFacturaDTO $dto, int $numero, ?string $numeroCompleto): Factura
     {
-        $factura->update($data);
+        $factura->update(array_merge($dto->toArray(), [
+            'numero'          => $numero,
+            'numero_completo' => $numeroCompleto,
+        ]));
 
         return $factura->refresh();
     }

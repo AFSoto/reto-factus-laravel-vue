@@ -9,6 +9,7 @@ namespace App\Repositories\Contracts;
  *
  * Define todas las operaciones de persistencia sobre la entidad Producto.
  * Los Services consumen solo esta interfaz para desacoplarse de Eloquent.
+ * crear() y actualizar() reciben DTOs tipados — nunca arrays sin estructura.
  *
  * Convención de filtros para paginar():
  *   - 'busqueda'  (string): filtra por nombre o código
@@ -16,6 +17,7 @@ namespace App\Repositories\Contracts;
  *   - 'con_iva'   (bool): filtra productos con IVA > 0
  */
 
+use App\DTOs\Producto\CreateProductoDTO;
 use App\Models\Producto;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
@@ -53,8 +55,8 @@ interface ProductoRepositoryInterface
     /**
      * Busca un producto por su código interno.
      *
-     * @param  string  $codigo   Código único del producto dentro del catálogo del usuario
-     * @param  int     $userId   ID del usuario autenticado
+     * @param  string  $codigo  Código único del producto dentro del catálogo del usuario
+     * @param  int     $userId  ID del usuario autenticado
      * @return Producto|null
      */
     public function buscarPorCodigo(string $codigo, int $userId): ?Producto;
@@ -62,32 +64,19 @@ interface ProductoRepositoryInterface
     /**
      * Crea un nuevo producto en el catálogo del usuario.
      *
-     * @param  array{
-     *     user_id: int,
-     *     codigo: string,
-     *     nombre: string,
-     *     descripcion?: string|null,
-     *     unidad_medida_id: string,
-     *     tipo_item_identificacion_id: string,
-     *     codigo_referencia?: string|null,
-     *     precio_unitario: float,
-     *     porcentaje_descuento?: float,
-     *     porcentaje_iva: float,
-     *     tribute_id: int,
-     *     activo?: bool
-     * }  $data  Datos del producto a crear
+     * @param  CreateProductoDTO  $dto  DTO con los datos validados del producto
      * @return Producto  El producto recién creado
      */
-    public function crear(array $data): Producto;
+    public function crear(CreateProductoDTO $dto): Producto;
 
     /**
      * Actualiza los datos de un producto existente.
      *
-     * @param  Producto  $producto  Instancia del producto a actualizar
-     * @param  array     $data      Campos a modificar (misma forma que crear())
+     * @param  Producto           $producto  Instancia del producto a actualizar
+     * @param  CreateProductoDTO  $dto       DTO con los nuevos datos validados
      * @return Producto  El producto con los datos actualizados
      */
-    public function actualizar(Producto $producto, array $data): Producto;
+    public function actualizar(Producto $producto, CreateProductoDTO $dto): Producto;
 
     /**
      * Elimina (soft delete) un producto del catálogo.

@@ -12,6 +12,7 @@ namespace App\Repositories;
  * con los Services que lo consumen.
  */
 
+use App\DTOs\Producto\CreateProductoDTO;
 use App\Models\Producto;
 use App\Repositories\Contracts\ProductoRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -105,26 +106,26 @@ class ProductoRepository implements ProductoRepositoryInterface
     }
 
     /**
-     * Crea y persiste un nuevo producto en el catálogo.
+     * Crea y persiste un nuevo producto desde el DTO.
      *
-     * @param  array  $data  Datos del producto (ver interfaz para la forma completa)
+     * @param  CreateProductoDTO  $dto  DTO con los datos validados del producto
      * @return Producto  La instancia creada con su ID asignado
      */
-    public function crear(array $data): Producto
+    public function crear(CreateProductoDTO $dto): Producto
     {
-        return Producto::create($data);
+        return Producto::create($dto->toArray());
     }
 
     /**
-     * Actualiza los atributos de un producto existente.
+     * Actualiza los atributos de un producto existente desde el DTO.
      *
-     * @param  Producto  $producto  Instancia a actualizar
-     * @param  array     $data      Campos a modificar
+     * @param  Producto           $producto  Instancia a actualizar
+     * @param  CreateProductoDTO  $dto       DTO con los nuevos datos validados
      * @return Producto  La instancia con los datos actualizados
      */
-    public function actualizar(Producto $producto, array $data): Producto
+    public function actualizar(Producto $producto, CreateProductoDTO $dto): Producto
     {
-        $producto->update($data);
+        $producto->update($dto->toArray());
 
         return $producto->refresh();
     }
