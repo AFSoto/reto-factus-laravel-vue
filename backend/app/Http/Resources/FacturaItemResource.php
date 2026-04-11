@@ -8,29 +8,31 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * Resource del modelo Producto.
- * Incluye precio_con_iva calculado para mostrar directamente en el frontend.
+ * Resource de un ítem (línea de detalle) de factura.
+ * Expone el snapshot del producto con todos los valores calculados.
  */
-class ProductoResource extends JsonResource
+class FacturaItemResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
         return [
             'id'                          => $this->id,
+            'producto_id'                 => $this->producto_id,
             'codigo'                      => $this->codigo,
             'nombre'                      => $this->nombre,
             'descripcion'                 => $this->descripcion,
             'unidad_medida_id'            => $this->unidad_medida_id,
             'tipo_item_identificacion_id' => $this->tipo_item_identificacion_id,
             'codigo_referencia'           => $this->codigo_referencia,
+            'cantidad'                    => $this->cantidad,
             'precio_unitario'             => $this->precio_unitario,
-            'precio_con_iva'              => $this->precioConIva(),
             'porcentaje_descuento'        => $this->porcentaje_descuento,
+            'valor_descuento'             => $this->valor_descuento,
             'porcentaje_iva'              => $this->porcentaje_iva,
+            'valor_iva'                   => $this->valor_iva,
             'tribute_id'                  => $this->tribute_id,
-            'activo'                      => $this->activo,
-            'created_at'                  => $this->created_at,
-            'updated_at'                  => $this->updated_at,
+            'subtotal'                    => $this->subtotal,
+            'total'                       => $this->total,
         ];
     }
 }
